@@ -1,3 +1,5 @@
+using MinimalAPI.Dominio.DTOs;
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -12,10 +14,3 @@ app.MapPost("/login", (LoginDTO loginDTO) =>
 });
 
 app.Run();
-
-public class LoginDTO
-{
-  // `default!;` diz que a propriedade não é nullable
-  public string Email { get; set; } = default!;
-  public string Senha { get; set; } = default!;
-}
