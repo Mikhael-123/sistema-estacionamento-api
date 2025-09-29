@@ -1,4 +1,4 @@
-namespace MinimalAPI.Dominio.DTOs;
+namespace MinimalApi.Dominio.DTOs;
 
 public class LoginDTO
 {

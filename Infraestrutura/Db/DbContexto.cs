@@ -1,6 +1,33 @@
+using Microsoft.EntityFrameworkCore;
+using MinimalApi.Dominio.Entidades;
+
 namespace MinimalApi.Infraestrutura.Db;
 
-public class DbContexto
+// Herda a classe `DbContext` do Entity Framework para configurar o ORM
+public class DbContexto : DbContext
 {
-  
+  // Variável que lê o arquivo appsettings.json
+  private readonly IConfiguration _configuracaoAppSettings;
+  public DbContexto(IConfiguration configurationAppSettings)
+  {
+    _configuracaoAppSettings = configurationAppSettings;
+  }
+
+  // Cria a entidade `Administrador` no banco de dados
+  public DbSet<Administrador> Administradores { get; set; } = default!;
+  // Sobrescreve o método `OnConfiguring` da classe `DbContext` para conectar ao banco
+  protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+  {
+    // Se em "Program.cs" não foi configurado o banco de dados no `builder`, ele é configurado neste bloco de código
+    if (!optionsBuilder.IsConfigured)
+    {
+      // Pega a propriedade "mysql" de "ConnectionStrings" do json no arquivo appsettings.json
+      string stringConexao = _configuracaoAppSettings.GetConnectionString("mysql").ToString();
+      if (!string.IsNullOrEmpty(stringConexao))
+      {
+        // Faz a conexão com o banco usando a string de conexão
+        optionsBuilder.UseMySql(stringConexao, ServerVersion.AutoDetect(stringConexao));
+      }
+    }
+  }
 }
