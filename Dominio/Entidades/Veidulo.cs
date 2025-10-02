@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MinimalApi.Dominio.Entidades;
 
-public class Administrador
+public class Veiculo
 {
   // Define a propriedade como chave primária
   [Key]
@@ -12,15 +12,13 @@ public class Administrador
   public int Id { get; set; }
   // Define a propriedade como campo obrigatório
   [Required]
-  // Define 255 como limite de tamanho da propriedade
-  [StringLength(255)]
-  public string Email { get; set; } = default!;
+  // Define 150 como limite de tamanho da propriedade
+  [StringLength(150)]
+  public string Nome { get; set; } = default!;
   [Required]
-  // Define 50 como limite de tamanho da propriedade
-  [StringLength(50)]
-  public string Senha { get; set; } = default!;
+  // Define 100 como limite de tamanho da propriedade
+  [StringLength(100)]
+  public string Marca { get; set; } = default!;
   [Required]
-  // Define 10 como limite de tamanho da propriedade
-  [StringLength(10)]
-  public string Perfil { get; set; } = default!;
+  public int Ano { get; set; } = default!;
 }

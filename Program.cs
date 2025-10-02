@@ -11,6 +11,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+/*
+`AddScoped`, `AddTransient` e `AddSingleton`, são métodos que executam um serviço (TService), ao chamar uma implementação (TImplementation), onde "TService" são as Interfaces que definem como a classe/implementação deve ser estruturada, e "TImplementation" é onde fica a lógica responsável por fazer o serviço funcionar
+
+`AddScoped<TService, TImplementation>()` diz que ao chamar "TService", é para criar uma instância de "TImplementation" a cada *nova requisição*
+`AddTransient<TService, TImplementation>()` diz que ao chamar "TService", é para criar uma instância de "TImplementation" *toda vez* que o *serviço é solicitado*
+`AddSingleton<TService, TImplementation>()` diz que ao chamar "TService", é para criar uma instância *única* de "TImplementation" para *toda a aplicação*
+*/
+
+// Diz que ao chamar `IAdministradorServico`, é para criar uma instância de `AdministradorServico`
 builder.Services.AddScoped<IAdministradorServico, AdministradorServico>();
 // Configura o `builder` para conectar ao banco de dados
 builder.Services.AddDbContext<DbContexto>(opt =>

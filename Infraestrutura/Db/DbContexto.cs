@@ -15,6 +15,8 @@ public class DbContexto : DbContext
 
   // Cria a entidade `Administradores` no banco de dados
   public DbSet<Administrador> Administradores { get; set; } = default!;
+  // Cria a entidade `Veiculos` no banco de dados
+  public DbSet<Veiculo> Veiculos { get; set; } = default!;
   // Sobrescreve o método `OnModelCreating` da classe `DbContext` para criar um administrador padrão
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
