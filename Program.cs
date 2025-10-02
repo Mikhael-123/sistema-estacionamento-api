@@ -1,9 +1,17 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.Dominio.DTOs;
+using MinimalApi.Dominio.Interfaces;
+using MinimalApi.Dominio.Servico;
 using MinimalApi.Infraestrutura.Db;
 
 // Variável que prepara a aplicação web definindo serviços antes de "construir" a aplicação
 var builder = WebApplication.CreateBuilder(args);
+// Adicionando swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IAdministradorServico, AdministradorServico>();
 // Configura o `builder` para conectar ao banco de dados
 builder.Services.AddDbContext<DbContexto>(opt =>
 {
@@ -15,14 +23,20 @@ builder.Services.AddDbContext<DbContexto>(opt =>
 // Cria uma instância de `builder`
 var app = builder.Build();
 
+// Usa o swagger se a aplicação tiver em ambiente de desenvolvimento
+if (app.Environment.IsDevelopment())
+{
+  app.UseSwagger();
+  app.UseSwaggerUI();
+}
+
 // Define uma rota GET ao acessar "/"
 app.MapGet("/", () => "Rota padrão");
 
 // Define uma rota POST ao acessar "/login"
-// OBS: O parâmetro irá pegar o JSON no BODY da requisição
-app.MapPost("/login", (LoginDTO loginDTO) =>
+app.MapPost("/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico administradorServico) =>
 {
-  if (loginDTO.Email == "adm@teste.com" && loginDTO.Senha == "12345678")
+  if (administradorServico.Login(loginDTO) != null)
     return Results.Ok("Login realizado com sucesso");
   else
     return Results.Unauthorized();

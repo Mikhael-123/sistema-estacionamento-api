@@ -13,8 +13,22 @@ public class DbContexto : DbContext
     _configuracaoAppSettings = configurationAppSettings;
   }
 
-  // Cria a entidade `Administrador` no banco de dados
+  // Cria a entidade `Administradores` no banco de dados
   public DbSet<Administrador> Administradores { get; set; } = default!;
+  // Sobrescreve o método `OnModelCreating` da classe `DbContext` para criar um administrador padrão
+  protected override void OnModelCreating(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<Administrador>().HasData(
+      new Administrador
+      {
+        // A propriedade `Id` precisa ser especificada durante a seed, mesmo que ela seja "auto-incrementada"
+        Id = 1,
+        Email = "adm@teste.com",
+        Senha = "123456",
+        Perfil = "Adm"
+      }
+    );
+  }
   // Sobrescreve o método `OnConfiguring` da classe `DbContext` para conectar ao banco
   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
   {
@@ -22,7 +36,7 @@ public class DbContexto : DbContext
     if (!optionsBuilder.IsConfigured)
     {
       // Pega a propriedade "mysql" de "ConnectionStrings" do json no arquivo appsettings.json
-      string stringConexao = _configuracaoAppSettings.GetConnectionString("mysql").ToString();
+      string? stringConexao = _configuracaoAppSettings.GetConnectionString("mysql");
       if (!string.IsNullOrEmpty(stringConexao))
       {
         // Faz a conexão com o banco usando a string de conexão
