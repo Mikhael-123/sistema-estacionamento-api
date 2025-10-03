@@ -37,7 +37,7 @@ public class VeiculoServico : IVeiculoServico
     _contexto.SaveChanges();
   }
 
-  public List<Veiculo> Todos(int pagina, string? nome = null, string? marca = null)
+  public List<Veiculo> Todos(int? pagina = 1, string? nome = null, string? marca = null)
   {
     // `AsQueryable()` permite ir "montando" a `query` para ir filtrando os dados de `Veiculos`
     var query = _contexto.Veiculos.AsQueryable();
@@ -60,9 +60,10 @@ public class VeiculoServico : IVeiculoServico
     int itensPorPagina = 10;
 
     // "Pula" a quantidade de `itensPorPagina` * (pagina - 1) e "Pega" a quantidade de `itensPorPagina` dos itens da `query`, e reatribui o valor
-    query = query.Skip((pagina - 1) * itensPorPagina).Take(itensPorPagina);
+    if (pagina != null)
+      query = query.Skip(((int)pagina - 1) * itensPorPagina).Take(itensPorPagina);
 
     // Retorna uma lista da `query` feita, contendo os veiculos filtrados
-    return query.ToList();
+      return query.ToList();
   }
 }
