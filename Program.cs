@@ -42,12 +42,12 @@ if (app.Environment.IsDevelopment())
 # endregion
 
 # region Home
-// Define uma rota GET ao acessar "/"
+// Rota padrão da aplicação, retorna um json com algumas informações
 app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
 # endregion
 
 # region Administradores
-// Define uma rota POST ao acessar "/login"
+// Loga o usuário como admnistrador se as credenciais estiverem corretas
 app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico administradorServico) =>
 {
   if (administradorServico.Login(loginDTO) != null)
@@ -58,8 +58,36 @@ app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministra
 # endregion
 
 # region Veiculos
+ErrosDeValidacao validaDTO(VeiculoDTO veiculoDTO)
+{
+  // Instanciando a classe `ErrosDeValidacao` para acumular as mensagens de erro de validação
+  // A propriedade `Mensagens`, deve ser instanciada
+  var validacao = new ErrosDeValidacao()
+  {
+    Mensagens = new List<string>()
+  };
+
+  // Validando as propriedades do DTO recebido
+  if (string.IsNullOrEmpty(veiculoDTO.Nome))
+    validacao.Mensagens.Add("O campo 'nome' não pode ficar em branco");
+
+  if (string.IsNullOrEmpty(veiculoDTO.Marca))
+    validacao.Mensagens.Add("O campo 'marca' não pode ficar em branco");
+
+  if (veiculoDTO.Ano < 1950)
+    validacao.Mensagens.Add("O campo 'ano' não pode ser inferior à 1950");
+    
+  return validacao;
+}
+
+// Cadastra um novo veículo, pegando as informações pelo body da requisição
 app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veiculoServico) =>
 {
+  ErrosDeValidacao validacao = validaDTO(veiculoDTO);
+  // Se a quantidade de strings dentro de `Mensagens` for maior que 0, é retornado um "BadRequest"
+  if (validacao.Mensagens.Count > 0)
+    return Results.BadRequest(validacao);
+
   Veiculo veiculo = new Veiculo
   {
     Nome = veiculoDTO.Nome,
@@ -71,6 +99,7 @@ app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veic
   return Results.Created($"/veiculo/{veiculo.Id}", veiculo);
 }).WithTags("Veiculos");
 
+// Retorna alguns veículos cadastrados separados por página, que pode ser especificada na query
 app.MapGet("/veiculos", ([FromQuery] int? pagina, IVeiculoServico veiculoServico) =>
 {
   List<Veiculo> veiculos = veiculoServico.Todos(pagina);
@@ -78,6 +107,7 @@ app.MapGet("/veiculos", ([FromQuery] int? pagina, IVeiculoServico veiculoServico
   return Results.Ok(veiculos);
 }).WithTags("Veiculos");
 
+// Retorna 1 veículo pelo Id especificado na rota
 app.MapGet("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServico) =>
 {
   Veiculo? veiculo = veiculoServico.BuscaPorId(id);
@@ -87,8 +117,13 @@ app.MapGet("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServico
   return Results.Ok(veiculo);
 }).WithTags("Veiculos");
 
+// Atualiza um veículo pelo Id especificado na rota
 app.MapPut("/veiculos/{id}", ([FromRoute] int id, [FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veiculoServico) =>
 {
+  ErrosDeValidacao validacao = validaDTO(veiculoDTO);
+  // Se a quantidade de strings dentro de `Mensagens` for maior que 0, é retornado um "BadRequest"
+  if (validacao.Mensagens.Count > 0)
+    return Results.BadRequest(validacao);
   Veiculo? veiculo = veiculoServico.BuscaPorId(id);
 
   if (veiculo == null) return Results.NotFound();
@@ -102,6 +137,7 @@ app.MapPut("/veiculos/{id}", ([FromRoute] int id, [FromBody] VeiculoDTO veiculoD
   return Results.NoContent();
 }).WithTags("Veiculos");
 
+// Deleta um veículo pelo Id especificado na rota
 app.MapDelete("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServico) =>
 { 
   Veiculo? veiculo = veiculoServico.BuscaPorId(id);
@@ -113,4 +149,5 @@ app.MapDelete("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServ
   return Results.NoContent();
 }).WithTags("Veiculos");
 # endregion
+
 app.Run();
