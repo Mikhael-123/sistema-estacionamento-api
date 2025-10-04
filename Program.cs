@@ -2,10 +2,71 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.Dominio.DTOs;
 using MinimalApi.Dominio.Entidades;
+using MinimalApi.Dominio.Enuns;
 using MinimalApi.Dominio.Interfaces;
 using MinimalApi.Dominio.ModelViews;
 using MinimalApi.Dominio.Servico;
 using MinimalApi.Infraestrutura.Db;
+
+# region Utils
+// Função genérica que verifica a instância do DTO recebido e valida os dados
+ErrosDeValidacao validaDTO<T>(T dto)
+{
+  // Instanciando a classe `ErrosDeValidacao` para acumular as mensagens de erro de validação
+  // A propriedade `Mensagens`, deve ser instanciada
+  var validacao = new ErrosDeValidacao()
+  {
+    Mensagens = new List<string>()
+  };
+
+  // Verificando de qual instância o DTO recebido pertence, e validando as propriedades do DTO recebido
+  if (dto is VeiculoDTO veiculoDTO)
+  {
+    if (string.IsNullOrEmpty(veiculoDTO.Nome))
+      validacao.Mensagens.Add("O campo 'nome' não pode ficar em branco");
+
+    if (string.IsNullOrEmpty(veiculoDTO.Marca))
+      validacao.Mensagens.Add("O campo 'marca' não pode ficar em branco");
+
+    if (veiculoDTO.Ano < 1950)
+      validacao.Mensagens.Add("O campo 'ano' não pode ser inferior à 1950");
+  }
+  else if (dto is AdministradorDTO administradorDTO)
+  {
+    if (string.IsNullOrEmpty(administradorDTO.Email))
+      validacao.Mensagens.Add("O campo 'email' não pode ficar em branco");
+    if (string.IsNullOrEmpty(administradorDTO.Senha))
+      validacao.Mensagens.Add("O campo 'senha' não pode ficar em branco");
+    if (string.IsNullOrEmpty(administradorDTO.Perfil.ToString()))
+      validacao.Mensagens.Add("O campo 'perfil' não pode ficar em branco");
+  }
+    
+  return validacao;
+}
+
+// Recebe uma lista com todos os dados dos administradores do banco de dados e retorna uma lista com somente as informações permitidas
+List<AdministradorModelView> PegarAdministradoresView(List<Administrador> administradoresModel)
+{
+  // O parâmetro `administradoresModel` é uma lista de instâncias de `Administrador`, que possuem todos os dados relacionados aos administradores do banco de dados, `AdministradorModelView` é um objeto para mostrar apenas as informações permitidas ao usuário
+  List<AdministradorModelView> administradoresView = new List<AdministradorModelView>();
+
+  // Pegando os dados de `administradoresModel` e colocando em `administradoresView` para que sejam mostradas apenas as informações permitidas ao usuário
+  foreach (Administrador administrador in administradoresModel)
+  {
+    AdministradorModelView administradorView = new AdministradorModelView
+    {
+      Id = administrador.Id,
+      Email = administrador.Email,
+      Perfil = administrador.Perfil,
+    };
+
+    administradoresView.Add(administradorView);
+  }
+
+  // Retorna uma lista de `AdministradorModelView`, que mostram apenas as informações de administradores permitidas
+  return administradoresView;
+}
+# endregion
 
 # region Builder
 // Variável que prepara a aplicação web definindo serviços antes de "construir" a aplicação
@@ -55,31 +116,60 @@ app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministra
   else
     return Results.Unauthorized();
 }).WithTags("Administradores");
+
+app.MapPost("/administradores", ([FromBody] AdministradorDTO administradorDTO, IAdministradorServico administradorServico) =>
+{
+  ErrosDeValidacao validacao = validaDTO(administradorDTO);
+  // Se a quantidade de strings dentro de `Mensagens` for maior que 0, é retornado um "BadRequest"
+  if (validacao.Mensagens.Count > 0)
+    return Results.BadRequest(validacao);
+
+  Administrador administrador = new Administrador
+  {
+    Email = administradorDTO.Email,
+    Senha = administradorDTO.Senha,
+    Perfil = administradorDTO.Perfil.ToString() ?? Perfil.Editor.ToString(),
+  };
+  administradorServico.Incluir(administrador);
+
+  var administradorView = new AdministradorModelView
+  {
+    Id = administrador.Id,
+    Email = administrador.Email,
+    Perfil = administrador.Perfil,
+  };
+
+  return Results.Created($"/administradores/{administradorView.Id}", administradorView);
+}).WithTags("Administradores");
+
+app.MapGet("/administradores", ([FromQuery] int? pagina, IAdministradorServico administradorServico) =>
+{
+  // `administradores` guarda todos os dados dos administradores do banco dados
+  List<Administrador> administradores = administradorServico.Todos(pagina);
+  // `administradoresView` guarda dados de administradores que podem ser mostrados ao usuário
+  List<AdministradorModelView> administradoresView = PegarAdministradoresView(administradores);
+
+  return Results.Ok(administradoresView);
+}).WithTags("Administradores");
+
+app.MapGet("/administradores/{id}", ([FromQuery] int id, IAdministradorServico administradorServico) =>
+{
+  Administrador? administrador = administradorServico.BuscaPorId(id);
+
+  if (administrador == null) return Results.NotFound();
+
+  var administradorView = new AdministradorModelView
+  {
+    Id = administrador.Id,
+    Email = administrador.Email,
+    Perfil = administrador.Perfil,
+  };
+
+  return Results.Ok(administrador);
+}).WithTags("Administradores");
 # endregion
 
 # region Veiculos
-ErrosDeValidacao validaDTO(VeiculoDTO veiculoDTO)
-{
-  // Instanciando a classe `ErrosDeValidacao` para acumular as mensagens de erro de validação
-  // A propriedade `Mensagens`, deve ser instanciada
-  var validacao = new ErrosDeValidacao()
-  {
-    Mensagens = new List<string>()
-  };
-
-  // Validando as propriedades do DTO recebido
-  if (string.IsNullOrEmpty(veiculoDTO.Nome))
-    validacao.Mensagens.Add("O campo 'nome' não pode ficar em branco");
-
-  if (string.IsNullOrEmpty(veiculoDTO.Marca))
-    validacao.Mensagens.Add("O campo 'marca' não pode ficar em branco");
-
-  if (veiculoDTO.Ano < 1950)
-    validacao.Mensagens.Add("O campo 'ano' não pode ser inferior à 1950");
-    
-  return validacao;
-}
-
 // Cadastra um novo veículo, pegando as informações pelo body da requisição
 app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veiculoServico) =>
 {
