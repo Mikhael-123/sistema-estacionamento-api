@@ -38,7 +38,7 @@ public class DbContexto : DbContext
     if (!optionsBuilder.IsConfigured)
     {
       // Pega a propriedade "mysql" de "ConnectionStrings" do json no arquivo appsettings.json
-      string? stringConexao = _configuracaoAppSettings.GetConnectionString("mysql");
+      string? stringConexao = _configuracaoAppSettings.GetConnectionString("MySql");
       if (!string.IsNullOrEmpty(stringConexao))
       {
         // Faz a conexão com o banco usando a string de conexão
