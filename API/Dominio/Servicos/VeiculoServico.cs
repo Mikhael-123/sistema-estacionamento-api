@@ -61,7 +61,12 @@ public class VeiculoServico : IVeiculoServico
 
     // "Pula" a quantidade de `itensPorPagina` * (pagina - 1) e "Pega" a quantidade de `itensPorPagina` dos itens da `query`, e reatribui o valor
     if (pagina != null)
+    {
+      // Se não for especificado a página, retorna a pagina 1 com a quantidade de `itensPorPagina`
+      pagina = 1;
+      // Reatribui a `query` com os itens separados por páginas
       query = query.Skip(((int)pagina - 1) * itensPorPagina).Take(itensPorPagina);
+    }
 
     // Retorna uma lista da `query` feita, contendo os veiculos filtrados
       return query.ToList();
