@@ -1,10 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection.Metadata;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using MinimalApi.Dominio.DTOs;
 using MinimalApi.Dominio.Entidades;
 using MinimalApi.Dominio.Enuns;
@@ -19,7 +22,37 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Adicionando swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Adiciona e configura o Swagger na aplicação
+builder.Services.AddSwaggerGen(options =>
+{
+  // --- Define um esquema de segurança chamado "Bearer" ---
+  // Isso informa ao Swagger que o app usa autenticação via token JWT no header Authorization.
+  options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+  {
+    Name = "Authorization",              // Nome do header HTTP usado para enviar o token
+    Type = SecuritySchemeType.Http,      // Tipo de autenticação HTTP (vs. API key, OAuth2 etc.)
+    Scheme = "bearer",                   // Esquema do tipo "Bearer" (autenticação baseada em token)
+    BearerFormat = "JWT",                // Indica que o formato do token é JWT
+    In = ParameterLocation.Header,       // Diz que o token vai no cabeçalho HTTP
+    Description = "Insira o token JWT recebido ao logar, para ter acesso aos endpoints"
+    // Descrição exibida na interface do Swagger (ajuda o usuário)
+  });
+
+  // --- Define o requisito de segurança ---
+  // Aqui estamos dizendo ao Swagger que, por padrão, todas as rotas exigem o esquema "Bearer"
+  options.AddSecurityRequirement(new OpenApiSecurityRequirement
+  {
+    {
+      new OpenApiSecurityScheme{
+        Reference = new OpenApiReference{
+          Type = ReferenceType.SecurityScheme, // Diz que está se referindo a um esquema já definido
+          Id = "Bearer",                       // Nome do esquema definido acima
+        }
+      },
+      new string[] { } // Escopos (vazio porque não há escopos como em OAuth2)
+    }
+  });
+});
 
 // Adiciona o serviço de autorização de rotas
 builder.Services.AddAuthorization();
@@ -30,7 +63,7 @@ var jwtKey = builder.Configuration.GetSection("Jwt")["Key"];
 if (string.IsNullOrEmpty(jwtKey))
   throw new Exception("Não foi possível pegar a chave JWT");
   
-// Adicionando o serviõ de autenticação por tokens JWT
+// Adicionando o serviço de autenticação por tokens JWT
 builder.Services.AddAuthentication(option => {
   option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
   option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -39,6 +72,8 @@ builder.Services.AddAuthentication(option => {
   {
     ValidateLifetime = true,
     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+    ValidateIssuer = false,
+    ValidateAudience = false,
   };
 });
 
@@ -75,7 +110,7 @@ app.UseAuthorization();
 
 # region Home
 // Rota padrão da aplicação, retorna um json com algumas informações
-app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
+app.MapGet("/", () => Results.Json(new Home())).WithTags("Home").AllowAnonymous();
 # endregion
 
 # region Administradores
@@ -87,7 +122,7 @@ app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministra
   if (adm != null)
   {
     var token = GerarTokenJWT(adm);
-    
+
     return Results.Ok(new AdministradorLogado
     {
       Email = adm.Email,
@@ -97,7 +132,7 @@ app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministra
   }
   else
     return Results.Unauthorized();
-}).WithTags("Administradores");
+}).WithTags("Administradores").AllowAnonymous();
 
 app.MapPost("/administradores", ([FromBody] AdministradorDTO administradorDTO, IAdministradorServico administradorServico) =>
 {
@@ -122,7 +157,7 @@ app.MapPost("/administradores", ([FromBody] AdministradorDTO administradorDTO, I
   };
 
   return Results.Created($"/administradores/{administradorView.Id}", administradorView);
-}).WithTags("Administradores").RequireAuthorization();
+}).WithTags("Administradores").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" });
 
 app.MapGet("/administradores", ([FromQuery] int? pagina, IAdministradorServico administradorServico) =>
 {
@@ -132,7 +167,7 @@ app.MapGet("/administradores", ([FromQuery] int? pagina, IAdministradorServico a
   List<AdministradorModelView> administradoresView = PegarAdministradoresView(administradores);
 
   return Results.Ok(administradoresView);
-}).WithTags("Administradores").RequireAuthorization();
+}).WithTags("Administradores").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" });
 
 app.MapGet("/administradores/{id}", ([FromQuery] int id, IAdministradorServico administradorServico) =>
 {
@@ -148,7 +183,7 @@ app.MapGet("/administradores/{id}", ([FromQuery] int id, IAdministradorServico a
   };
 
   return Results.Ok(administrador);
-}).WithTags("Administradores").RequireAuthorization();
+}).WithTags("Administradores").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" });
 # endregion
 
 # region Veiculos
@@ -169,7 +204,7 @@ app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veic
   veiculoServico.Incluir(veiculo);
 
   return Results.Created($"/veiculo/{veiculo.Id}", veiculo);
-}).WithTags("Veiculos").RequireAuthorization();
+}).WithTags("Veiculos").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" });
 
 // Retorna alguns veículos cadastrados separados por página, que pode ser especificada na query
 app.MapGet("/veiculos", ([FromQuery] int? pagina, IVeiculoServico veiculoServico) =>
@@ -177,7 +212,7 @@ app.MapGet("/veiculos", ([FromQuery] int? pagina, IVeiculoServico veiculoServico
   List<Veiculo> veiculos = veiculoServico.Todos(pagina);
 
   return Results.Ok(veiculos);
-}).WithTags("Veiculos");
+}).WithTags("Veiculos").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" });
 
 // Retorna 1 veículo pelo Id especificado na rota
 app.MapGet("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServico) =>
@@ -187,7 +222,7 @@ app.MapGet("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServico
   if (veiculo == null) return Results.NotFound();
 
   return Results.Ok(veiculo);
-}).WithTags("Veiculos").RequireAuthorization();
+}).WithTags("Veiculos").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" });
 
 // Atualiza um veículo pelo Id especificado na rota
 app.MapPut("/veiculos/{id}", ([FromRoute] int id, [FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veiculoServico) =>
@@ -207,7 +242,7 @@ app.MapPut("/veiculos/{id}", ([FromRoute] int id, [FromBody] VeiculoDTO veiculoD
   veiculoServico.Atualizar(veiculo);
 
   return Results.NoContent();
-}).WithTags("Veiculos").RequireAuthorization();
+}).WithTags("Veiculos").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" });
 
 // Deleta um veículo pelo Id especificado na rota
 app.MapDelete("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServico) =>
@@ -219,7 +254,7 @@ app.MapDelete("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServ
   veiculoServico.Apagar(veiculo);
 
   return Results.NoContent();
-}).WithTags("Veiculos").RequireAuthorization();
+}).WithTags("Veiculos").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" });
 # endregion
 
 # region Utils
@@ -292,8 +327,8 @@ string GerarTokenJWT(Administrador administrador)
   // Cria uma lista de `Claim`, cada `Claim` é um dado do Json Web Token
   var claims = new List<Claim>
   {
-    new Claim(ClaimTypes.Email, administrador.Email),
-    new Claim("Perfil", administrador.Perfil),
+    new Claim("Email", administrador.Email),
+    new Claim(ClaimTypes.Role, administrador.Perfil),
   };
 
   // Cria um token com a lista de `Claim`, com duração de 1 dia e com as credenciais geradas
