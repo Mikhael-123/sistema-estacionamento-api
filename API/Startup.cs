@@ -27,6 +27,7 @@ public class Startup
   private string jwtKey = default!;
   public IConfiguration Configuration { get; set; } = default!;
 
+  // Define quais serviços serão injetados no container
   public void ConfigureServices(IServiceCollection services)
   {
     // Adicionando swagger
@@ -97,6 +98,7 @@ public class Startup
     });
   }
 
+  // Define as rotas e middlewares que a aplicação vai usar
   public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
   {
     app.UseSwagger();
