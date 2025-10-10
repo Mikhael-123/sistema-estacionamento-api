@@ -30,9 +30,9 @@ public class AdministradorServico : IAdministradorServico
 
   public Administrador? Login(LoginDTO loginDTO)
   {
-    Administrador? listAdm = _contexto.Administradores.Where(item => item.Email == loginDTO.Email && item.Senha == loginDTO.Senha).FirstOrDefault();
+    Administrador? adm = _contexto.Administradores.Where(item => item.Email == loginDTO.Email && item.Senha == loginDTO.Senha).FirstOrDefault();
 
-    return listAdm;
+    return adm;
   }
 
   public List<Administrador> Todos(int? pagina = 1)
