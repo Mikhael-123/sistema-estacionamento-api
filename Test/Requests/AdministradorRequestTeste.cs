@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using MinimalApi.Dominio.DTOs;
+using MinimalApi.Dominio.ModelViews;
 using Test.Helpers;
 
 namespace Test.Requests;
@@ -38,5 +39,18 @@ public sealed class AdministradorRequestTeste
 
     // Verifica se a requisição teve um código de status `OK`
     Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+    // Armazena o conteúdo json retornado da requisição
+    var result = await response.Content.ReadAsStringAsync();
+    // "Deserializa" o json de `result` como um `AdministradorLogado`
+    var admLogado = JsonSerializer.Deserialize<AdministradorLogado>(result, new JsonSerializerOptions
+    {
+      PropertyNameCaseInsensitive = true,
+    });
+
+    // Verifica os dados retornados da requisição
+    Assert.IsNotNull(admLogado?.Email ?? "");
+    Assert.IsNotNull(admLogado?.Perfil ?? "");
+    Assert.IsNotNull(admLogado?.Token ?? "");
   }
 }

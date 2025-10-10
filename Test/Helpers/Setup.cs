@@ -5,7 +5,6 @@ using Test.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Test.Helpers;
-
 // Classe que vai fazer requests em memória para os testes
 public class Setup
 {
@@ -23,7 +22,7 @@ public class Setup
     // Atribui o valor de `Setup.testContext` para o `testContext` do teste atual
     Setup.testContext = testContext;
     // Sobe um servidor em memória para testes
-    Setup.http = new Setup.http.WithWebHostBuilder(builder =>
+    Setup.http = new WebApplicationFactory<Startup>().WithWebHostBuilder(builder =>
     {
       // Define a porta do localhost que será usada, e define o ambiente da aplicação como "Testing"
       builder.UseSetting("https_port", Setup.PORT).UseEnvironment("Testing");
@@ -35,7 +34,10 @@ public class Setup
       });
     });
 
-    Setup.client = Setup.http.CreateClient();
+    Setup.client = Setup.http.CreateClient(new WebApplicationFactoryClientOptions
+    {
+      BaseAddress = new Uri($"http://localhost:{Setup.PORT}"),
+    });
   }
 
   public static void ClassCleanup()

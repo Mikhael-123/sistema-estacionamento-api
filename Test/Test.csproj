@@ -20,10 +20,9 @@
     <ProjectReference Include="..\API\MinimalApi.csproj" />
   </ItemGroup>
 
-  <!--Impede o projeto de copiar o arquivo `appsettings.json` do projeto referenciado-->
   <ItemGroup>
     <None Update="appsettings.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>
