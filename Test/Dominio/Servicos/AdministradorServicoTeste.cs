@@ -45,7 +45,7 @@ public sealed class AdministradorServicoTeste
     administradorServico.Incluir(adm);
 
     // Verifica existe 1 registro em administradores
-    Assert.AreEqual(1, administradorServico.Todos().Count(), "Deveria haver 1 registro no banco de dados");
+    Assert.AreEqual(1, administradorServico.Todos().Count(), "Deveria haver 1 registro na tabela administradores");
   }
 
   [TestMethod]

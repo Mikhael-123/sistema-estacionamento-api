@@ -28,6 +28,14 @@ public class DbContexto : DbContext
         Email = "adm@teste.com",
         Senha = "123456",
         Perfil = "Adm"
+      },
+      new Administrador
+      {
+        // A propriedade `Id` precisa ser especificada durante a seed, mesmo que ela seja "auto-incrementada"
+        Id = 2,
+        Email = "editor@teste.com",
+        Senha = "123456",
+        Perfil = "Editor"
       }
     );
   }
@@ -37,7 +45,7 @@ public class DbContexto : DbContext
     // Se em "Program.cs" não foi configurado o banco de dados no `builder`, ele é configurado neste bloco de código
     if (!optionsBuilder.IsConfigured)
     {
-      // Pega a propriedade "mysql" de "ConnectionStrings" do json no arquivo appsettings.json
+      // Pega a propriedade "MySql" de "ConnectionStrings" do json no arquivo appsettings.json
       string? stringConexao = _configuracaoAppSettings.GetConnectionString("MySql");
       if (!string.IsNullOrEmpty(stringConexao))
       {
