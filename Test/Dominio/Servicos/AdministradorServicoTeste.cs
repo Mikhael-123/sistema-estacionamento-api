@@ -12,11 +12,12 @@ namespace Test.Dominio.Servicos;
 [DoNotParallelize]
 public sealed class AdministradorServicoTeste
 {
+  private const string category = "AdministradorServico";
   // Cria uma configuração de `DbContext` para teste e retorna uma instância de `DbContexto` com essas configurações
   private static DbContexto CriarDbContextoTeste()
   {
     // Configurar o ConfigurationBuilder
-    var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).AddEnvironmentVariables();
+    var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.Test.json", optional: false, reloadOnChange: true).AddEnvironmentVariables();
     var configuration = builder.Build();
 
     var contexto = new DbContexto(configuration);
@@ -27,7 +28,7 @@ public sealed class AdministradorServicoTeste
   }
 
   [TestMethod]
-  [TestCategory("AdministradorServico")]
+  [TestCategory(category)]
   [Description("Verifica se um administrador criado é salvo no banco de dados")]
   public void TestandoSalvarNovoAdministrador()
   {
@@ -49,7 +50,7 @@ public sealed class AdministradorServicoTeste
   }
 
   [TestMethod]
-  [TestCategory("AdministradorServico")]
+  [TestCategory(category)]
   [Description("Verifica se um administrador salvo no banco de dados é retornado pelo id")]
   public void TestandoBuscaPorId()
   {
@@ -77,7 +78,7 @@ public sealed class AdministradorServicoTeste
   }
 
   [TestMethod]
-  [TestCategory("AdministradorServico")]
+  [TestCategory(category)]
   [Description("Verifica se um administrador de perfil 'Adm' salvo no banco de dados é retornado ao passar seu email e senha")]
   public void TestandoLogin()
   {
@@ -112,7 +113,7 @@ public sealed class AdministradorServicoTeste
   }
 
   [TestMethod]
-  [TestCategory("AdministradorServico")]
+  [TestCategory(category)]
   [Description("Verifica se um administrador de perfil 'Adm' salvo no banco de dados é retornado ao passar seu email e senha")]
   public void TestandoRetonarTodosAdministradores()
   {

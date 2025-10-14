@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using MinimalApi.Dominio.Interfaces;
 using Test.Mocks;
 using Microsoft.Extensions.DependencyInjection;
+using MinimalApi.Utils;
 
 namespace Test.Helpers;
 // Classe que vai fazer requests em memória para os testes
@@ -16,6 +17,7 @@ public class Setup
   public static WebApplicationFactory<Startup> http = default!;
   // `HttpClient` permite fazer requisições http
   public static HttpClient client = default!;
+  public static JwtUtils JwtUtils = new JwtUtils();
 
   public static void ClassInit(TestContext testContext)
   {
@@ -25,7 +27,16 @@ public class Setup
     Setup.http = new WebApplicationFactory<Startup>().WithWebHostBuilder(builder =>
     {
       // Define a porta do localhost que será usada, e define o ambiente da aplicação como "Testing"
-      builder.UseSetting("https_port", Setup.PORT).UseEnvironment("Testing");
+      builder.UseSetting("https_port", Setup.PORT).UseEnvironment("Test");
+
+      builder.ConfigureAppConfiguration(config =>
+      {
+        var buildConfig = config.Build();
+
+        // Define a chave JWT de teste
+        var jwtKey = buildConfig.GetSection("Jwt")["Key"] ?? "";
+        Setup.JwtUtils.JwtKey = jwtKey;
+      });
 
       builder.ConfigureServices(services =>
       {

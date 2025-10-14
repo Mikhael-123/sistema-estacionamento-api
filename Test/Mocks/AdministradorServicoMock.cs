@@ -7,22 +7,31 @@ namespace Test.Mocks;
 // Classe que vai "mockar" os dados da base de dados "administradores", ou seja, simular dados que seriam retornados da base de dados, para os testes manipularem dados simulados ao invés dos dados reais
 public class AdministradorServicoMock : IAdministradorServico
 {
-  // Lista que vai simular o banco de dados, com um administrador padrão
-  private static List<Administrador> administradores = new List<Administrador>
+  public AdministradorServicoMock()
   {
-    new Administrador{
+    var admPadrao = new Administrador {
       Id = 1,
       Email = "adm@teste.com",
       Senha = "123456",
       Perfil = "Adm"
-    },
-    new Administrador{
+    };
+    var editorPadrao = new Administrador
+    {
       Id = 2,
       Email = "editor@teste.com",
       Senha = "123456",
       Perfil = "Editor"
-    },
-  }; 
+    };
+
+    // Limpa a lista a cada instância de `AdministradorServicoMock`
+    administradores.Clear();
+    // Adicionar um administrador e editor padrão
+    administradores.Add(admPadrao);
+    administradores.Add(editorPadrao);
+  }
+
+  // Lista que vai simular o banco de dados
+  private static List<Administrador> administradores = new List<Administrador>();
 
   public Administrador? BuscaPorId(int id)
   {
@@ -50,6 +59,14 @@ public class AdministradorServicoMock : IAdministradorServico
 
   public List<Administrador> Todos(int? pagina = 1)
   {
+    int itensPorPagina = 10;
+
+    if (pagina != null)
+    {
+      return administradores.Take(itensPorPagina).Skip(((int)pagina * 1) * itensPorPagina).ToList();
+    }
+
+
     return administradores;
   }
 }
