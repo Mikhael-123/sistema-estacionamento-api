@@ -68,6 +68,7 @@ public sealed class AdministradorRequestTeste
     // "Deserializa" o json de `result` como um `AdministradorLogado`
     var admLogado = JsonSerializer.Deserialize<AdministradorLogado>(result, new JsonSerializerOptions
     {
+      // Define que o nome da propriedade é "CaseInsensitive", e não vai alterar o nome das propriedades
       PropertyNameCaseInsensitive = true,
     });
 
@@ -139,9 +140,6 @@ public sealed class AdministradorRequestTeste
     var administradorServicoMock = new AdministradorServicoMock();
     var admPadrao = administradorServicoMock.BuscaPorId(1);
 
-    Assert.IsNotNull(admPadrao, "Deveria ser retornado um administrador padrão");
-    Assert.AreEqual(Perfil.Adm.ToString(), admPadrao.Perfil);
-
     var token = Setup.JwtUtils.GerarTokenJWT(admPadrao);
 
     var request = new HttpRequestMessage(HttpMethod.Get, "/administradores");
@@ -173,5 +171,33 @@ public sealed class AdministradorRequestTeste
 
     Assert.IsNotNull(administradoresView, "A requisição deveria retornar uma lista de administradores do tipo `AdministradoresModelView`");
     Assert.AreEqual(0, administradoresView.Count(), "A lista de administradores deveria estar vazia pois foi pedida a página 2");
+  }
+
+  [TestMethod]
+  [TestCategory(category)]
+  [Description("Verifica se a rota 'GET:/administradores/{id}' retorna o administrador de id especificado")]
+  public async Task TestandoGetAdministradorPorId()
+  {
+    var administradorServicoMock = new AdministradorServicoMock();
+    var admPadrao = administradorServicoMock.BuscaPorId(1);
+
+    var token = Setup.JwtUtils.GerarTokenJWT(admPadrao);
+
+    var request = new HttpRequestMessage(HttpMethod.Get, "/administradores/2");
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    var response = await Setup.client.SendAsync(request);
+
+    Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, "A requisição deveria retornar o status http '200 (OK)'");
+
+    var content = await response.Content.ReadAsStringAsync();
+    var administradorView = JsonSerializer.Deserialize<AdministradorModelView>(content, new JsonSerializerOptions
+    {
+      PropertyNameCaseInsensitive = true,
+    });
+
+    Assert.IsNotNull(administradorView, "A requisição deveria retornar um administrador");
+    Assert.AreEqual(2, administradorView.Id, "A propriedade 'Id' do administrador retornado deveria ser 2");
+    Assert.AreEqual("editor@teste.com", administradorView.Email, "A propriedade 'Email' do administrador retornado deveria ser 'editor@teste.com'");
+    Assert.AreEqual(Perfil.Editor.ToString(), administradorView.Perfil, "A propriedade 'Perfil' do administrador retornado deveria ser 'Editor'");
   }
 }

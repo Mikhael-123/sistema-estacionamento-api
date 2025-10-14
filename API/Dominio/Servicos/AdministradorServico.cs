@@ -44,7 +44,6 @@ public class AdministradorServico : IAdministradorServico
 
     if (pagina != null)
     {
-      pagina = 1;
       query = query.Skip(((int)pagina - 1) * itensPorPagina).Take(itensPorPagina);
     }
 

@@ -1,19 +1,18 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using MinimalApi.Dominio.Entidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MinimalApi.Dominio.DTOs;
-using MinimalApi.Dominio.Entidades;
 using MinimalApi.Dominio.Enuns;
 using MinimalApi.Dominio.Interfaces;
 using MinimalApi.Dominio.ModelViews;
 using MinimalApi.Dominio.Servico;
 using MinimalApi.Infraestrutura.Db;
+using MinimalApi.Utils;
 
 public class Startup
 {
@@ -21,10 +20,10 @@ public class Startup
   {
     Configuration = configuration;
     // Pega a chave JWT do arquivo "appsettings.json", ou uma string vazia se não for possível acessar a chave
-    jwtKey = Configuration.GetSection("Jwt")["Key"] ?? "";
+    jwtUtils.JwtKey = Configuration.GetSection("Jwt")["Key"] ?? "";
   }
 
-  private string jwtKey = default!;
+  private JwtUtils jwtUtils = new JwtUtils();
   public IConfiguration Configuration { get; set; } = default!;
 
   // Define quais serviços serão injetados no container
@@ -77,7 +76,7 @@ public class Startup
       option.TokenValidationParameters = new TokenValidationParameters
       {
         ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtUtils.JwtKey)),
         ValidateIssuer = false,
         ValidateAudience = false,
       };
@@ -126,7 +125,7 @@ public class Startup
 
         if (adm != null)
         {
-          var token = GerarTokenJWT(adm);
+          var token = jwtUtils.GerarTokenJWT(adm);
 
           return Results.Ok(new AdministradorLogado
           {
@@ -174,7 +173,7 @@ public class Startup
         return Results.Ok(administradoresView);
       }).WithTags("Administradores").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" });
 
-      endpoints.MapGet("/administradores/{id}", ([FromQuery] int id, IAdministradorServico administradorServico) =>
+      endpoints.MapGet("/administradores/{id}", ([FromRoute] int id, IAdministradorServico administradorServico) =>
       {
         Administrador? administrador = administradorServico.BuscaPorId(id);
 
@@ -187,7 +186,7 @@ public class Startup
           Perfil = administrador.Perfil,
         };
 
-        return Results.Ok(administrador);
+        return Results.Ok(administradorView);
       }).WithTags("Administradores").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" });
       # endregion
 
@@ -320,30 +319,5 @@ public class Startup
 
     // Retorna uma lista de `AdministradorModelView`, que mostram apenas as informações de administradores permitidas
     return administradoresView;
-  }
-
-  // Gera e retorna um Json Web Token
-  private string GerarTokenJWT(Administrador administrador)
-  {
-    // `securityKey` guarda a criptografia da chave JWT
-    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-    // Gera uma credencial passando a chave criptografada e o algoritmo de descriptografia, e guarda em `credentials`
-    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-    // Cria uma lista de `Claim`, cada `Claim` é um dado do Json Web Token
-    var claims = new List<Claim>
-    {
-      new Claim("Email", administrador.Email),
-      new Claim(ClaimTypes.Role, administrador.Perfil),
-    };
-
-    // Cria um token com a lista de `Claim`, com duração de 1 dia e com as credenciais geradas
-    var token = new JwtSecurityToken(
-      claims: claims,
-      expires: DateTime.Now.AddDays(1),
-      signingCredentials: credentials
-    );
-
-    return new JwtSecurityTokenHandler().WriteToken(token);
   }
 }
