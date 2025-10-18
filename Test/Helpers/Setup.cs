@@ -17,7 +17,7 @@ public class Setup
   public static WebApplicationFactory<Startup> http = default!;
   // `HttpClient` permite fazer requisições http
   public static HttpClient client = default!;
-  // Instância estática de `JwtUtils` para gerenciar operações relacionadas a JWT, armazenando apenas uma chave JWT
+  // Instância estática de `JwtUtils` para gerenciar operações relacionadas a JWT
   public static JwtUtils JwtUtils = new JwtUtils();
 
   public static void ClassInit(TestContext testContext)
@@ -27,18 +27,19 @@ public class Setup
     // Sobe um servidor em memória para testes
     Setup.http = new WebApplicationFactory<Startup>().WithWebHostBuilder(builder =>
     {
-      // Define a porta do localhost que será usada, e define o ambiente da aplicação como "Testing"
+      // Define a porta do localhost que será usada, e define o ambiente da aplicação como "Test"
       builder.UseSetting("https_port", Setup.PORT).UseEnvironment("Test");
 
       builder.ConfigureAppConfiguration(config =>
       {
         var buildConfig = config.Build();
 
-        // Define a chave JWT de teste
+        // Define a chave JWT de teste na propriedade estática `JwtKey`
         var jwtKey = buildConfig.GetSection("Jwt")["Key"] ?? "";
-        Setup.JwtUtils.JwtKey = jwtKey;
+        JwtUtils.JwtKey = jwtKey;
       });
 
+      // Cria um cliente http com as configurações de `Setup.http`
       builder.ConfigureServices(services =>
       {
         // Injeta a dependência de `AdministradorServicoMock` ao chamar `IAdministradorServico`

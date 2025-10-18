@@ -8,7 +8,7 @@ namespace MinimalApi.Utils;
 
 public class JwtUtils
 {
-  public string JwtKey = default!;
+  public static string JwtKey { get; set; } = default!;
 
   public string GerarTokenJWT(Administrador? administrador)
   {

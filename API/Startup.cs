@@ -20,16 +20,14 @@ public class Startup
   {
     Configuration = configuration;
     // Pega a chave JWT do arquivo "appsettings.json", ou uma string vazia se não for possível acessar a chave
-    jwtUtils.JwtKey = Configuration.GetSection("Jwt")["Key"] ?? "";
+    JwtUtils.JwtKey = Configuration.GetSection("Jwt")["Key"] ?? "";
   }
 
-  private JwtUtils jwtUtils = new JwtUtils();
   public IConfiguration Configuration { get; set; } = default!;
 
   // Define quais serviços serão injetados no container
   public void ConfigureServices(IServiceCollection services)
   {
-    // Adicionando swagger
     services.AddEndpointsApiExplorer();
     // Adiciona e configura o Swagger na aplicação
     services.AddSwaggerGen(options =>
@@ -76,7 +74,7 @@ public class Startup
       option.TokenValidationParameters = new TokenValidationParameters
       {
         ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtUtils.JwtKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtUtils.JwtKey)),
         ValidateIssuer = false,
         ValidateAudience = false,
       };
@@ -122,6 +120,7 @@ public class Startup
       endpoints.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico administradorServico) =>
       {
         Administrador? adm = administradorServico.Login(loginDTO);
+        var jwtUtils = new JwtUtils();
 
         if (adm != null)
         {
@@ -294,7 +293,7 @@ public class Startup
       if (string.IsNullOrEmpty(administradorDTO.Perfil.ToString()))
         validacao.Mensagens.Add("O campo 'perfil' não pode ficar em branco");
     }
-      
+
     return validacao;
   }
 

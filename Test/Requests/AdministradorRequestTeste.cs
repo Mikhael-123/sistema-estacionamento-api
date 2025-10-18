@@ -13,6 +13,7 @@ namespace Test.Requests;
 [TestClass]
 public sealed class AdministradorRequestTeste
 {
+  // Inicia a classe `Setup` passando o `TestContext` de `AdministradorRequestTeste`
   [ClassInitialize]
   public static void ClassInitialize(TestContext context)
   {
@@ -24,6 +25,18 @@ public sealed class AdministradorRequestTeste
     Setup.ClassCleanup();
   }
 
+  // Reescreve o "banco" com os dados padrões antes e depois de cada teste
+  [TestInitialize]
+  public void TestInitialize()
+  {
+    AdministradorServicoMock.Seed();
+  }
+  [TestCleanup]
+  public void TestCleanup()
+  {
+    AdministradorServicoMock.Seed();
+  }
+
   private const string category = "AdministradorRequest";
 
   [TestMethod]
@@ -31,6 +44,7 @@ public sealed class AdministradorRequestTeste
   [Description("Verifica o administrador padrão retornado de `AdministradorServicoMock` e se é criado um token JWT para ele")]
   public void TestandoTokenAdministradorPadrao()
   {
+    // Dentro de `AdministradorServicoMock` deve existir 2 administradores no "banco"
     var administradorServicoMock = new AdministradorServicoMock();
     var admPadrao = administradorServicoMock.BuscaPorId(1);
 

@@ -14,19 +14,31 @@ namespace Test.Requests;
 [DoNotParallelize]
 public class VeiculoRequestTeste
 {
-  private const string category = "VeiculoRequest";
-
+  // Inicia a classe `Setup` passando o `TestContext` de `VeiculoRequestTeste`
   [ClassInitialize]
   public static void ClassInitialize(TestContext context)
   {
     Setup.ClassInit(context);
   }
-
   [ClassCleanup]
   public static void ClassCleanup()
   {
     Setup.ClassCleanup();
   }
+
+  // Limpa o "banco" antes e depois de cada teste
+  [TestInitialize]
+  public void TestInitialize()
+  {
+    VeiculoServicoMock.ApagarTudo();
+  }
+  [TestCleanup]
+  public void TestCleanup()
+  {
+    VeiculoServicoMock.ApagarTudo();
+  }
+
+  private const string category = "VeiculoRequest";
 
   [TestMethod]
   [TestCategory(category)]
@@ -54,7 +66,6 @@ public class VeiculoRequestTeste
     string token = Setup.JwtUtils.GerarTokenJWT(admPadrao);
 
     var veiculoServicoMock = new VeiculoServicoMock();
-    veiculoServicoMock.ApagarTudo();
 
     var novoVeiculo = new VeiculoDTO
     {
@@ -94,7 +105,6 @@ public class VeiculoRequestTeste
     string token = Setup.JwtUtils.GerarTokenJWT(admPadrao);
 
     var veiculoServicoMock = new VeiculoServicoMock();
-    veiculoServicoMock.ApagarTudo();
 
     var novoVeiculo = new Veiculo
     {
@@ -133,7 +143,6 @@ public class VeiculoRequestTeste
     string token = Setup.JwtUtils.GerarTokenJWT(admPadrao);
 
     var veiculoServicoMock = new VeiculoServicoMock();
-    veiculoServicoMock.ApagarTudo();
 
     var novoVeiculo = new Veiculo
     {
@@ -179,6 +188,8 @@ public class VeiculoRequestTeste
     var admPadrao = administradorServicoMock.BuscaPorId(1);
     string token = Setup.JwtUtils.GerarTokenJWT(admPadrao);
 
+    var veiculoServicoMock = new VeiculoServicoMock();
+
     var novoVeiculo = new Veiculo
     {
       Nome = "deleteVeiculo1",
@@ -186,7 +197,6 @@ public class VeiculoRequestTeste
       Ano = 2006
     };
 
-    var veiculoServicoMock = new VeiculoServicoMock();
     veiculoServicoMock.Incluir(novoVeiculo);
     var veiculoBancoMock = veiculoServicoMock.BuscaPorId(1);
     Assert.IsNotNull(veiculoBancoMock, "Deveria ser retornado o veiculo criado");

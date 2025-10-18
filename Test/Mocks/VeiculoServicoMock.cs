@@ -8,7 +8,7 @@ public class VeiculoServicoMock : IVeiculoServico
 {
   private static List<Veiculo> veiculos = new List<Veiculo>();
 
-  public void ApagarTudo()
+  public static void ApagarTudo()
   {
     veiculos.Clear();
 

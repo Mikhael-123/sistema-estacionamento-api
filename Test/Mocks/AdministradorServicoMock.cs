@@ -9,7 +9,13 @@ public class AdministradorServicoMock : IAdministradorServico
 {
   public AdministradorServicoMock()
   {
-    var admPadrao = new Administrador {
+    Seed();
+  }
+
+  public static void Seed()
+  {
+    var admPadrao = new Administrador
+    {
       Id = 1,
       Email = "adm@teste.com",
       Senha = "123456",
@@ -23,7 +29,7 @@ public class AdministradorServicoMock : IAdministradorServico
       Perfil = "Editor"
     };
 
-    // Limpa a lista a cada instância de `AdministradorServicoMock`
+    // Limpa a lista
     administradores.Clear();
     // Adiciona um administrador e editor padrão
     administradores.Add(admPadrao);
