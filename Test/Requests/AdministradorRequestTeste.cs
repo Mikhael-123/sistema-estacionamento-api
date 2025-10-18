@@ -27,9 +27,9 @@ public sealed class AdministradorRequestTeste
   private const string category = "AdministradorRequest";
 
   [TestMethod]
-  [TestCategory($"{category}")]
-  [Description("Verifica o administrador padrão retornado de `AdministradorServicoMock`")]
-  public void TestandoAdministradorPadrao()
+  [TestCategory(category)]
+  [Description("Verifica o administrador padrão retornado de `AdministradorServicoMock` e se é criado um token JWT para ele")]
+  public void TestandoTokenAdministradorPadrao()
   {
     var administradorServicoMock = new AdministradorServicoMock();
     var admPadrao = administradorServicoMock.BuscaPorId(1);
@@ -37,6 +37,10 @@ public sealed class AdministradorRequestTeste
     Assert.IsNotNull(admPadrao, "Deveria ser retornado um administrador padrão de `AdministradorServicoMock`");
     // Verifica se o administrador retornado tem perfil de administrador
     Assert.AreEqual(Perfil.Adm.ToString(), admPadrao.Perfil, "O administrador padrão deveria ter o perfil de administrador");
+
+    string token = Setup.JwtUtils.GerarTokenJWT(admPadrao);
+
+    Assert.AreNotEqual("", token, "Deveria ser retornado um token JWT");
   }
 
   [TestMethod]
@@ -123,10 +127,10 @@ public sealed class AdministradorRequestTeste
 
     // Verifica se a requisição retorna uma instância de `AdministradorModelView`
     Assert.IsNotNull(admResult, "A requisição deveria retornar uma model view de admininistrador");
-    // Verifica se a requisição retorna o caminho para acessar o administrador criado
-    Assert.AreEqual("/administradores/3", Convert.ToString(response.Headers.Location));
-    // Verifica o id do administrador retornado, já existem dois registros no "banco", o administrador criado é o terceiro registro
+    // Verifica o id do administrador retornado, já existem dois registros no "banco", o administrador criado deve ser terceiro registro e ter o id 3
     Assert.AreEqual(3, admResult.Id, "O administrador retornado deveria ter o id 3");
+    // Verifica se a requisição retorna o caminho para acessar o administrador criado
+    Assert.AreEqual("/administradores/3", response.Headers.Location?.ToString());
     // Verifica os restos das propriedades do administrador retornado
     Assert.AreEqual("novoAdministrador@teste.com", admResult.Email, "A propriedade 'Email' do administrador retornado deve ser igual a do administrador criado");
     Assert.AreEqual(Perfil.Adm.ToString(), admResult.Perfil, "A propriedade 'Perfil' do administrador retornado deve ser igual a do administrador criado");
@@ -134,7 +138,7 @@ public sealed class AdministradorRequestTeste
 
   [TestMethod]
   [TestCategory(category)]
-  [Description("Verifica se a rota 'GET:/administradores' retorna uma lista de administradores do tipo `AdministradoresModelView`")]
+  [Description("Verifica se a rota 'GET:/administradores' retorna uma lista de administradores do tipo `AdministradoresModelView`, e se está sendo separado por páginas")]
   public async Task TestandoGetAdministradores()
   {
     var administradorServicoMock = new AdministradorServicoMock();

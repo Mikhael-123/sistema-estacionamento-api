@@ -25,7 +25,7 @@ public class AdministradorServicoMock : IAdministradorServico
 
     // Limpa a lista a cada instância de `AdministradorServicoMock`
     administradores.Clear();
-    // Adicionar um administrador e editor padrão
+    // Adiciona um administrador e editor padrão
     administradores.Add(admPadrao);
     administradores.Add(editorPadrao);
   }

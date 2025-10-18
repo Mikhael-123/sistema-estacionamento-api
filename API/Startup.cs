@@ -207,7 +207,7 @@ public class Startup
         };
         veiculoServico.Incluir(veiculo);
 
-        return Results.Created($"/veiculo/{veiculo.Id}", veiculo);
+        return Results.Created($"/veiculos/{veiculo.Id}", veiculo);
       }).WithTags("Veiculos").RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" });
 
       // Retorna alguns veículos cadastrados separados por página, que pode ser especificada na query

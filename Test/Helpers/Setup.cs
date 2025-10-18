@@ -17,6 +17,7 @@ public class Setup
   public static WebApplicationFactory<Startup> http = default!;
   // `HttpClient` permite fazer requisições http
   public static HttpClient client = default!;
+  // Instância estática de `JwtUtils` para gerenciar operações relacionadas a JWT, armazenando apenas uma chave JWT
   public static JwtUtils JwtUtils = new JwtUtils();
 
   public static void ClassInit(TestContext testContext)
@@ -42,6 +43,8 @@ public class Setup
       {
         // Injeta a dependência de `AdministradorServicoMock` ao chamar `IAdministradorServico`
         services.AddScoped<IAdministradorServico, AdministradorServicoMock>();
+        // Injeta a dependência de `IVeiculoServico` ao chamar `VeiculoServicoMock`
+        services.AddScoped<IVeiculoServico, VeiculoServicoMock>();
       });
     });
 
